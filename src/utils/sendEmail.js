@@ -16,6 +16,10 @@ const sendEmail = async (email, title, body) => {
         user: smtpUser,
         pass: smtpPass,
       },
+      tls: {
+        ciphers: 'SSLv3', // Helps with some handshake issues
+      },
+      family: 4, // Force IPv4 to avoid ENETUNREACH on Render
     });
 
     let info = await transporter.sendMail({
