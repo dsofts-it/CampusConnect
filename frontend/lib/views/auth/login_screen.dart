@@ -21,21 +21,66 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
+      print('🔐 Attempting login...');
+      print('📧 Email: ${_emailController.text}');
+      
       final response = await ApiService.login(
         _emailController.text,
         _passwordController.text,
       );
 
-      final token = response['token'];
-      final role = response['user']['role'];
+      print('✅ Login response received:');
+      print('   Full response: $response');
+      print('   Response type: ${response.runtimeType}');
+      print('   Response keys: ${response.keys}');
+      
+      // Extract token - try different possible locations
+      String? token;
+      String? role;
+      
+      if (response.containsKey('token')) {
+        token = response['token'];
+        print('   ✓ Token found at response["token"]');
+      }
+      
+      if (response.containsKey('role')) {
+        role = response['role'];
+        print('   ✓ Role found at response["role"]: $role');
+      } else if (response.containsKey('user') && response['user'] != null) {
+        if (response['user'] is Map && response['user'].containsKey('role')) {
+          role = response['user']['role'];
+          print('   ✓ Role found at response["user"]["role"]: $role');
+        }
+      }
+      
+      final tokenPreview = token != null && token.length > 20 ? token.substring(0, 20) : (token ?? 'NULL');
+      print('🎫 Extracted Token: $tokenPreview...');
+      print('👤 Extracted Role: $role');
+      
+      if (token == null) {
+        throw Exception('No token received from server. Response: $response');
+      }
+      
+      if (role == null) {
+        throw Exception('No role received from server. Response: $response');
+      }
       
       await ApiService.saveToken(token);
       await ApiService.saveUserRole(role);
+      
+      print('💾 Token and role saved successfully');
+      print('🎉 Login successful! Navigating to main screen...');
 
       Navigator.pushReplacementNamed(context, '/main');
     } catch (e) {
+      print('❌ Login error: $e');
+      print('❌ Error type: ${e.runtimeType}');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
+        SnackBar(
+          content: Text('Login failed: $e'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 5),
+        ),
       );
     } finally {
       setState(() {

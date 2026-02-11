@@ -22,6 +22,10 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> login(String email, String password) async {
+    print('🔐 Login API call starting...');
+    print('📧 Email: $email');
+    print('📡 URL: $baseUrl/auth/login');
+    
     final response = await http.post(
       Uri.parse('$baseUrl/auth/login'),
       headers: {'Content-Type': 'application/json'},
@@ -30,38 +34,73 @@ class ApiService {
         'password': password,
       }),
     );
+    
+    print('📥 Login response status: ${response.statusCode}');
+    print('📥 Login response body: ${response.body}');
+    
     return _handleResponse(response);
   }
 
   static Future<Map<String, dynamic>> getProfile() async {
+    print('👤 Getting profile...');
     final token = await getToken();
-    if (token == null) throw Exception('No token found');
+    final tokenPreview = token != null && token.length > 20 ? token.substring(0, 20) : (token ?? 'NULL');
+    print('🎫 Retrieved token: $tokenPreview...');
+    
+    if (token == null) {
+      print('❌ No token found in storage');
+      throw Exception('No token found - please login again');
+    }
+    
+    final url = '$baseUrl/users/me';
+    final headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+    
+    print('📡 Calling: $url');
+    print('📋 Headers: ${headers.keys}');
+    final authPreview = token.length > 30 ? token.substring(0, 30) : token;
+    print('🔐 Authorization: Bearer $authPreview...');
     
     final response = await http.get(
-      Uri.parse('$baseUrl/users/me'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
+      Uri.parse(url),
+      headers: headers,
     );
+    
+    print('📥 Profile response status: ${response.statusCode}');
+    print('📥 Profile response body: ${response.body}');
+    
     return _handleResponse(response);
   }
 
   static Future<Map<String, dynamic>> getAllUpdates({String? category, bool? isImportant}) async {
-    final token = await getToken();
-    if (token == null) throw Exception('No token found');
-
+    print('📚 Getting all updates (PUBLIC - no auth required)...');
+    
     String query = '';
     if (category != null) query += 'category=$category&';
     if (isImportant != null) query += 'isImportant=$isImportant&';
 
+    final url = '$baseUrl/updates?$query';
+    print('📡 Calling: $url');
+    print('🔓 No authentication required for this endpoint');
+    
     final response = await http.get(
-      Uri.parse('$baseUrl/updates?$query'),
+      Uri.parse(url),
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
+        // No Authorization header - this is a public endpoint
       },
     );
+    
+    print('📥 Updates response status: ${response.statusCode}');
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final preview = response.body.length > 200 ? response.body.substring(0, 200) : response.body;
+      print('📥 Updates response body: $preview...');
+    } else {
+      print('📥 Updates error response: ${response.body}');
+    }
+    
     return _handleResponse(response);
   }
 
@@ -96,29 +135,50 @@ class ApiService {
 
 
   static Future<void> saveToken(String token) async {
+    final savePreview = token.length > 20 ? token.substring(0, 20) : token;
+    print('💾 Saving token: $savePreview...');
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('token', token);
+    print('✅ Token saved successfully');
   }
 
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('token');
+    final token = prefs.getString('token');
+    if (token != null) {
+      final preview = token.length > 20 ? token.substring(0, 20) : token;
+      print('🔑 Token retrieved from storage: $preview...');
+      print('🔍 FULL TOKEN (for debugging): $token');
+      print('📏 Token length: ${token.length}');
+      if (token.length > 10) {
+        print('🔤 Token starts with: ${token.substring(0, 10)}');
+      }
+    } else {
+      print('⚠️ No token found in storage');
+    }
+    return token;
   }
 
   static Future<void> removeToken() async {
+    print('🗑️ Removing token and role...');
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
     await prefs.remove('role');
+    print('✅ Token and role removed');
   }
   
   static Future<void> saveUserRole(String role) async {
+    print('💾 Saving user role: $role');
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('role', role);
+    print('✅ Role saved successfully');
   }
 
   static Future<String?> getUserRole() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('role');
+    final role = prefs.getString('role');
+    print('🔑 Role retrieved from storage: $role');
+    return role;
   }
 
 

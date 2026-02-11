@@ -20,20 +20,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _fetchUpdates() async {
     try {
+      print('📡 Fetching updates from API...');
       final response = await ApiService.getAllUpdates();
+      print('✅ Response received: ${response.toString()}');
+      
       if (mounted) {
         setState(() {
           _updates = response['data'] ?? [];
           _isLoading = false;
+          print('📊 Total updates loaded: ${_updates.length}');
         });
       }
     } catch (e) {
+      print('❌ Error fetching updates: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(
+            content: Text('Failed to load updates: $e'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 5),
+          ),
         );
       }
     }
@@ -63,11 +72,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: _isLoading
             ? Center(child: CircularProgressIndicator())
             : _updates.isEmpty
-                ? Center(
-                    child: Text(
-                      "No updates available",
-                      style: GoogleFonts.poppins(color: Colors.grey),
-                    ),
+                ? ListView(
+                    children: [
+                      SizedBox(height: 100),
+                      Icon(
+                        Icons.inbox_outlined,
+                        size: 80,
+                        color: Colors.grey[300],
+                      ),
+                      SizedBox(height: 16),
+                      Center(
+                        child: Text(
+                          "No updates available",
+                          style: GoogleFonts.poppins(
+                            color: Colors.grey,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Center(
+                        child: Text(
+                          "Pull down to refresh",
+                          style: GoogleFonts.poppins(
+                            color: Colors.grey[400],
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
                   )
                 : ListView.builder(
                     padding: EdgeInsets.all(16),

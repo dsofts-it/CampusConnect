@@ -13,22 +13,37 @@ class UpdateCard extends StatelessWidget {
     final description = update['description'] ?? '';
     final category = update['category'] ?? 'General';
     final isImportant = update['isImportant'] ?? false;
-    final createdBy = update['createdBy']['name'] ?? 'Unknown';
-    final likes = update['likes'] != null ? update['likes'].length : 0;
+    
+    // Safely handle createdBy which could be a Map, String (ID), or null
+    String createdBy = 'Unknown';
+    if (update['createdBy'] != null) {
+      if (update['createdBy'] is Map) {
+        createdBy = update['createdBy']['name'] ?? 'Unknown';
+      } else if (update['createdBy'] is String) {
+        // Fallback if population failed and we just have ID
+        createdBy = 'User'; 
+      }
+    }
+
+    final likes = (update['likes'] is List) ? update['likes'].length : 0;
     
     // Formatting dates if available (using simple string logic for brevity/consistency)
     String? dateRange;
-    if (update['startDate'] != null) {
-      DateTime start = DateTime.parse(update['startDate']);
-      String startStr = "${start.day}/${start.month}/${start.year}";
-      
-      if (update['endDate'] != null) {
-        DateTime end = DateTime.parse(update['endDate']);
-        String endStr = "${end.day}/${end.month}/${end.year}";
-        dateRange = "$startStr - $endStr";
-      } else {
-        dateRange = startStr;
+    try {
+      if (update['startDate'] != null) {
+        DateTime start = DateTime.parse(update['startDate']);
+        String startStr = "${start.day}/${start.month}/${start.year}";
+        
+        if (update['endDate'] != null) {
+          DateTime end = DateTime.parse(update['endDate']);
+          String endStr = "${end.day}/${end.month}/${end.year}";
+          dateRange = "$startStr - $endStr";
+        } else {
+          dateRange = startStr;
+        }
       }
+    } catch (e) {
+      dateRange = null; // Fallback if date parsing fails
     }
 
     return Card(

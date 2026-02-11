@@ -5,46 +5,97 @@ import 'package:frontend/services/api_service.dart';
 class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    print('🔄 Loading profile data...');
     return FutureBuilder<Map<String, dynamic>>(
       future: ApiService.getProfile(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          print('⏳ Waiting for profile data...');
+          return Scaffold(
+            appBar: AppBar(
+              title: Text('Profile'),
+              backgroundColor: Colors.deepPurple,
+              automaticallyImplyLeading: false,
+            ),
+            body: Center(child: CircularProgressIndicator()),
+          );
         }
 
         if (snapshot.hasError) {
-          return Center(child: Text("Error: ${snapshot.error}"));
+          print('❌ Profile error: ${snapshot.error}');
+          return Scaffold(
+            appBar: AppBar(
+              title: Text('Profile'),
+              backgroundColor: Colors.deepPurple,
+              automaticallyImplyLeading: false,
+            ),
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, size: 64, color: Colors.red),
+                  SizedBox(height: 16),
+                  Text(
+                    "Error loading profile",
+                    style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    "${snapshot.error}",
+                    style: GoogleFonts.poppins(color: Colors.grey),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          );
         }
 
-        final user = snapshot.data!['data']; // Assuming 'data' contains user info
+        if (!snapshot.hasData || snapshot.data == null) {
+           return Center(child: Text("No user data found"));
+        }
+
+        final user = snapshot.data!['data']; 
+        
+        if (user == null) {
+           return Center(child: Text("User data is empty"));
+        }
+        
+        final name = user['name'] ?? 'User';
+        final initial = name.isNotEmpty ? name[0].toUpperCase() : 'U';
+        final email = user['email'] ?? 'No Email';
+        final role = user['role'] ?? 'Student';
+        
+        print('✅ Profile loaded successfully: $name ($role)');
 
         return Scaffold(
           appBar: AppBar(
             title: Text('Profile'),
             backgroundColor: Colors.deepPurple,
+            automaticallyImplyLeading: false, // Don't show back button
           ),
-          body: Padding(
+          body: SingleChildScrollView( // Added scroll view for safety on small screens
             padding: const EdgeInsets.all(24.0),
             child: Column(
               children: [
                 CircleAvatar(
                   radius: 50,
-                  backgroundImage: NetworkImage('https://via.placeholder.com/150'),
+                  backgroundColor: Colors.deepPurple.shade100,
                   child: Text(
-                    user['name'][0].toUpperCase(),
-                    style: TextStyle(fontSize: 40, color: Colors.white),
+                    initial,
+                    style: TextStyle(fontSize: 40, color: Colors.deepPurple, fontWeight: FontWeight.bold),
                   ),
                 ),
                 SizedBox(height: 16),
                 Text(
-                  user['name'],
+                  name,
                   style: GoogleFonts.poppins(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
-                  user['role'].toUpperCase(),
+                  role.toUpperCase(),
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     color: Colors.grey,
@@ -52,12 +103,12 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 SizedBox(height: 32),
                 ListTile(
-                  leading: Icon(Icons.email),
-                  title: Text(user['email']),
+                  leading: Icon(Icons.email, color: Colors.deepPurple),
+                  title: Text(email, style: GoogleFonts.poppins()),
                 ),
                 ListTile(
-                  leading: Icon(Icons.logout),
-                  title: Text('Logout'),
+                  leading: Icon(Icons.logout, color: Colors.red),
+                  title: Text('Logout', style: GoogleFonts.poppins(color: Colors.red)),
                   onTap: () async {
                     await ApiService.removeToken();
                     Navigator.pushReplacementNamed(context, '/login');

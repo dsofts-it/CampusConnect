@@ -15,8 +15,10 @@ router.post('/', auth, isTeacher, createUpdate);
 router.put('/:id', auth, isTeacher, updateUpdate);
 router.delete('/:id', auth, isTeacher, deleteUpdate);
 
-// Shared routes (Teacher & Student)
-router.get('/', auth, getAllUpdates);
+// Public routes (no authentication required)
+router.get('/', getAllUpdates); // Anyone can view updates
+
+// Authenticated routes (requires login)
 router.put('/:id/like', auth, likeUpdate);
 
 export default router;
