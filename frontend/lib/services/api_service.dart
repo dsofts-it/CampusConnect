@@ -41,6 +41,38 @@ class ApiService {
     return _handleResponse(response);
   }
 
+  // Test endpoint to verify token
+  static Future<void> testToken() async {
+    print('');
+    print('🧪 TESTING TOKEN TRANSMISSION');
+    print('═══════════════════════════════════════════');
+    
+    final token = await getToken();
+    print('Token from storage: ${token != null ? "EXISTS (${token.length} chars)" : "NULL"}');
+    
+    if (token == null) {
+      print('❌ No token to test');
+      print('═══════════════════════════════════════════');
+      return;
+    }
+    
+    print('Calling test endpoint...');
+    final response = await http.get(
+      Uri.parse('$baseUrl/test/test-token'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+    print('═══════════════════════════════════════════');
+    print('');
+    print('Now check the BACKEND TERMINAL for detailed token analysis!');
+    print('');
+  }
+
   static Future<Map<String, dynamic>> getProfile() async {
     print('');
     print('═══════════════════════════════════════════');

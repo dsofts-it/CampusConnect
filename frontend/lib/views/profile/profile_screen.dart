@@ -3,11 +3,19 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:frontend/services/api_service.dart';
 
 class ProfileScreen extends StatelessWidget {
+  Future<Map<String, dynamic>> _loadProfile() async {
+    // First, test the token
+    await ApiService.testToken();
+    
+    // Then load profile
+    return await ApiService.getProfile();
+  }
+  
   @override
   Widget build(BuildContext context) {
     print('🔄 Loading profile data...');
     return FutureBuilder<Map<String, dynamic>>(
-      future: ApiService.getProfile(),
+      future: _loadProfile(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           print('⏳ Waiting for profile data...');

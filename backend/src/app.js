@@ -8,6 +8,8 @@ import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
 import updateRoutes from './routes/update.routes.js';
 
+import testRoutes from './routes/test.routes.js';
+
 const app = express();
 
 // Middleware
@@ -17,6 +19,7 @@ app.use(cookieParser());
 app.use(morgan('dev'));
 
 // Mount Routes
+app.use('/api/test', testRoutes); // Test route first
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/updates', updateRoutes);
