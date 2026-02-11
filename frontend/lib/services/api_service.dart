@@ -42,34 +42,59 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> getProfile() async {
-    print('👤 Getting profile...');
+    print('');
+    print('═══════════════════════════════════════════');
+    print('👤 GETTING PROFILE - DETAILED DEBUG');
+    print('═══════════════════════════════════════════');
+    
     final token = await getToken();
-    final tokenPreview = token != null && token.length > 20 ? token.substring(0, 20) : (token ?? 'NULL');
-    print('🎫 Retrieved token: $tokenPreview...');
+    
+    print('Step 1: Token Retrieved from Storage');
+    print('  - Token exists: ${token != null}');
+    if (token != null) {
+      print('  - Token length: ${token.length}');
+      print('  - First 10 chars: ${token.length >= 10 ? token.substring(0, 10) : token}');
+      print('  - Last 10 chars: ${token.length >= 10 ? token.substring(token.length - 10) : token}');
+      print('  - FULL TOKEN: $token');
+    } else {
+      print('  - ❌ TOKEN IS NULL!');
+    }
     
     if (token == null) {
       print('❌ No token found in storage');
+      print('═══════════════════════════════════════════');
+      print('');
       throw Exception('No token found - please login again');
     }
     
     final url = '$baseUrl/users/me';
+    final authHeader = 'Bearer $token';
     final headers = {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
+      'Authorization': authHeader,
     };
     
-    print('📡 Calling: $url');
-    print('📋 Headers: ${headers.keys}');
-    final authPreview = token.length > 30 ? token.substring(0, 30) : token;
-    print('🔐 Authorization: Bearer $authPreview...');
+    print('');
+    print('Step 2: Preparing Request');
+    print('  - URL: $url');
+    print('  - Authorization Header: $authHeader');
+    print('  - Header Length: ${authHeader.length}');
+    print('  - Headers: ${headers.keys.toList()}');
     
+    print('');
+    print('Step 3: Sending Request...');
     final response = await http.get(
       Uri.parse(url),
       headers: headers,
     );
     
-    print('📥 Profile response status: ${response.statusCode}');
-    print('📥 Profile response body: ${response.body}');
+    print('');
+    print('Step 4: Response Received');
+    print('  - Status Code: ${response.statusCode}');
+    print('  - Status: ${response.statusCode == 200 ? "✅ OK" : "❌ ERROR"}');
+    print('  - Body: ${response.body}');
+    print('═══════════════════════════════════════════');
+    print('');
     
     return _handleResponse(response);
   }
