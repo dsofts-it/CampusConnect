@@ -23,6 +23,13 @@ class ProfileScreen extends StatelessWidget {
 
         if (snapshot.hasError) {
           print('❌ Profile error: ${snapshot.error}');
+          
+          // Check if it's a token/auth error
+          final errorMsg = snapshot.error.toString();
+          final isAuthError = errorMsg.contains('401') || 
+                             errorMsg.contains('token') || 
+                             errorMsg.contains('No token');
+          
           return Scaffold(
             appBar: AppBar(
               title: Text('Profile'),
@@ -30,22 +37,45 @@ class ProfileScreen extends StatelessWidget {
               automaticallyImplyLeading: false,
             ),
             body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, size: 64, color: Colors.red),
-                  SizedBox(height: 16),
-                  Text(
-                    "Error loading profile",
-                    style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    "${snapshot.error}",
-                    style: GoogleFonts.poppins(color: Colors.grey),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      isAuthError ? Icons.lock_outline : Icons.error_outline,
+                      size: 64,
+                      color: isAuthError ? Colors.orange : Colors.red,
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      isAuthError ? "Please Login" : "Error loading profile",
+                      style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      isAuthError 
+                          ? "You need to login to view your profile"
+                          : "Something went wrong: ${snapshot.error}",
+                      style: GoogleFonts.poppins(color: Colors.grey, fontSize: 14),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 24),
+                    if (isAuthError)
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pushReplacementNamed(context, '/login');
+                        },
+                        icon: Icon(Icons.login),
+                        label: Text('Go to Login'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.deepPurple,
+                          padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                          textStyle: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           );

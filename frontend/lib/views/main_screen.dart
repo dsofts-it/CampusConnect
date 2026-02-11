@@ -16,8 +16,6 @@ class _MainScreenState extends State<MainScreen> {
   String? _userRole;
   bool _isLoading = true;
 
-  List<Widget> _pages = [];
-
   @override
   void initState() {
     super.initState();
@@ -26,28 +24,25 @@ class _MainScreenState extends State<MainScreen> {
 
   Future<void> _checkRole() async {
     final role = await ApiService.getUserRole();
-    if (role == null) {
-       // Handle logout or redirect?
-    }
+    print('🔑 User role: $role');
     
-    setState(() {
-      _userRole = role;
-      _isLoading = false;
-      
-      _pages = [
-        DashboardScreen(),
-        ExploreScreen(), // We will create this
-      ];
-
-      if (_userRole == 'teacher') {
-        _pages.add(UploadScreen());
-      }
-
-      _pages.add(ProfileScreen());
-    });
+    if (mounted) {
+      setState(() {
+        _userRole = role;
+        _isLoading = false;
+      });
+    }
   }
 
   void _onTabTapped(int index) {
+    // If student tries to tap Upload (index 2), ignore or show message
+    if (_userRole != 'teacher' && index == 2) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Only teachers can upload content')),
+      );
+      return;
+    }
+    
     setState(() {
       _currentIndex = index;
     });
@@ -61,7 +56,15 @@ class _MainScreenState extends State<MainScreen> {
 
     final bool isTeacher = _userRole == 'teacher';
     
-    // Define tabs dynamically
+    // Always show 4 pages - use placeholder for students' upload
+    final List<Widget> displayPages = [
+      DashboardScreen(),
+      ExploreScreen(),
+      isTeacher ? UploadScreen() : Center(child: Text('Only teachers can upload')),
+      ProfileScreen(),
+    ];
+    
+    // Define tabs - always show all 4
     List<BottomNavigationBarItem> items = [
       BottomNavigationBarItem(
         icon: Icon(Icons.home),
@@ -84,7 +87,7 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: _pages,
+        children: displayPages,
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
