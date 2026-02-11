@@ -6,13 +6,15 @@ export const auth = async (req, res, next) => {
     console.log('🔐 AUTH MIDDLEWARE - Validating Token');
     console.log('========================================');
 
-    // extract token
-    const tokenFromCookie = req.cookies.token;
-    const tokenFromBody = req.body.token;
+    // extract token - with null checks
+    const tokenFromCookie = req.cookies ? req.cookies.token : null;
+    const tokenFromBody = req.body ? req.body.token : null;
     const authHeader = req.header('Authorization');
     const tokenFromHeader = authHeader && authHeader.replace('Bearer ', '');
 
     console.log('Step 1: Token Sources');
+    console.log('  - req.cookies exists:', !!req.cookies);
+    console.log('  - req.body exists:', !!req.body);
     console.log(
       '  - Cookie:',
       tokenFromCookie ? `${tokenFromCookie.substring(0, 20)}...` : 'null',
