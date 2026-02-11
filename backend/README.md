@@ -108,3 +108,11 @@ Features:
 ## Postman Collection
 
 A `Postman_Collection.json` file is included in the root directory. Import it into Postman to test the APIs.
+
+## Keep the backend responsive
+
+Render (free) web services pause after 15 minutes of inactivity, so the first login/request after an idle period can take several minutes while the process warms up. To keep this app always responsive:
+
+1. In the Render dashboard, add an environment variable named `KEEP_ALIVE_URL` that points to your deployed root or a lightweight health route (for example `https://campus-update.onrender.com/`).
+2. (Optional) Set `KEEP_ALIVE_INTERVAL_MS` to the number of milliseconds between pings; it defaults to `780000` (13 minutes), which is just under Render’s 15-minute idle timeout.
+3. Once those values are saved, the backend will automatically ping the configured URL every interval to keep the service warm and speed up the first login after idle periods.

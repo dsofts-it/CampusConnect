@@ -89,65 +89,127 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  bool _obscurePassword = true;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Welcome Back',
-                style: GoogleFonts.poppins(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.deepPurple,
+        child: Center(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 48.0),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: 450),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // App Name
+                    Text(
+                      'Compus Connect',
+                      style: GoogleFonts.poppins(
+                        fontSize: 36,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.deepPurple,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    
+                    // Welcome Text
+                    Text(
+                      'Welcome Back!',
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 48),
+                    
+                    // Email Field
+                    CustomTextField(
+                      controller: _emailController,
+                      labelText: 'Email Address',
+                      prefixIcon: Icons.email_outlined,
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+                    SizedBox(height: 20),
+                    
+                    // Password Field with Eye Button
+                    TextField(
+                      controller: _passwordController,
+                      obscureText: _obscurePassword,
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        prefixIcon: Icon(Icons.lock_outline, color: Colors.deepPurple),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                            color: Colors.grey,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.deepPurple, width: 2),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
+                      ),
+                      style: GoogleFonts.poppins(),
+                    ),
+                    
+                    SizedBox(height: 32),
+                    
+                    // Login Button
+                    CustomButton(
+                      text: 'Login',
+                      onPressed: _login,
+                      isLoading: _isLoading,
+                    ),
+                    
+                    SizedBox(height: 24),
+                    
+                    // Sign Up Link
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Don't have an account? ",
+                          style: GoogleFonts.poppins(
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/signup');
+                          },
+                          child: Text(
+                            'Sign Up',
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.deepPurple,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              SizedBox(height: 8),
-              Text(
-                'Sign in to continue',
-                style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
-              ),
-              SizedBox(height: 32),
-              
-              CustomTextField(
-                controller: _emailController,
-                labelText: 'Email Address',
-                prefixIcon: Icons.email,
-                keyboardType: TextInputType.emailAddress,
-              ),
-              SizedBox(height: 16),
-              CustomTextField(
-                controller: _passwordController,
-                labelText: 'Password',
-                prefixIcon: Icons.lock,
-                obscureText: true,
-              ),
-              
-              SizedBox(height: 32),
-              CustomButton(
-                text: 'Login',
-                onPressed: _login,
-                isLoading: _isLoading,
-              ),
-              SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text("Don't have an account? "),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/signup');
-                    },
-                    child: Text('Sign Up'),
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
         ),
       ),

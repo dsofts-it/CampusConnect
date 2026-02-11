@@ -1,41 +1,80 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:frontend/services/api_service.dart';
 
-class UpdateCard extends StatelessWidget {
+class UpdateCard extends StatefulWidget {
   final Map<String, dynamic> update;
 
   const UpdateCard({Key? key, required this.update}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    final title = update['title'] ?? 'No Title';
-    final description = update['description'] ?? '';
-    final category = update['category'] ?? 'General';
-    final isImportant = update['isImportant'] ?? false;
+  _UpdateCardState createState() => _UpdateCardState();
+}
+
+class _UpdateCardState extends State<UpdateCard> {
+  late int _likeCount;
+  late bool _isLiked;
+  bool _isLiking = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _likeCount = (widget.update['likes'] is List) ? widget.update['likes'].length : 0;
+    _isLiked = false; // You can check if current user has liked this
+  }
+
+  Future<void> _toggleLike() async {
+    if (_isLiking) return; // Prevent multiple clicks
     
-    // Safely handle createdBy which could be a Map, String (ID), or null
+    setState(() {
+      _isLiking = true;
+      _isLiked = !_isLiked;
+      _likeCount += _isLiked ? 1 : -1;
+    });
+
+    try {
+      final updateId = widget.update['_id'];
+      await ApiService.likeUpdate(updateId);
+    } catch (e) {
+      // Revert on error
+      setState(() {
+        _isLiked = !_isLiked;
+        _likeCount += _isLiked ? 1 : -1;
+      });
+      print('Error liking update: $e');
+    } finally {
+      setState(() {
+        _isLiking = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final title = widget.update['title'] ?? 'No Title';
+    final description = widget.update['description'] ?? '';
+    final category = widget.update['category'] ?? 'General';
+    final isImportant = widget.update['isImportant'] ?? false;
+    
+    // Safely handle createdBy
     String createdBy = 'Unknown';
-    if (update['createdBy'] != null) {
-      if (update['createdBy'] is Map) {
-        createdBy = update['createdBy']['name'] ?? 'Unknown';
-      } else if (update['createdBy'] is String) {
-        // Fallback if population failed and we just have ID
+    if (widget.update['createdBy'] != null) {
+      if (widget.update['createdBy'] is Map) {
+        createdBy = widget.update['createdBy']['name'] ?? 'Unknown';
+      } else if (widget.update['createdBy'] is String) {
         createdBy = 'User'; 
       }
     }
-
-    final likes = (update['likes'] is List) ? update['likes'].length : 0;
     
-    // Formatting dates if available (using simple string logic for brevity/consistency)
+    // Formatting dates
     String? dateRange;
     try {
-      if (update['startDate'] != null) {
-        DateTime start = DateTime.parse(update['startDate']);
+      if (widget.update['startDate'] != null) {
+        DateTime start = DateTime.parse(widget.update['startDate']);
         String startStr = "${start.day}/${start.month}/${start.year}";
         
-        if (update['endDate'] != null) {
-          DateTime end = DateTime.parse(update['endDate']);
+        if (widget.update['endDate'] != null) {
+          DateTime end = DateTime.parse(widget.update['endDate']);
           String endStr = "${end.day}/${end.month}/${end.year}";
           dateRange = "$startStr - $endStr";
         } else {
@@ -43,13 +82,14 @@ class UpdateCard extends StatelessWidget {
         }
       }
     } catch (e) {
-      dateRange = null; // Fallback if date parsing fails
+      print('Error parsing dates: $e');
+      dateRange = null;
     }
 
     return Card(
-      elevation: 4,
+      elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      margin: EdgeInsets.symmetric(vertical: 8),
+      margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -63,41 +103,76 @@ class UpdateCard extends StatelessWidget {
                     category.toUpperCase(),
                     style: GoogleFonts.poppins(
                       color: Colors.white,
-                      fontSize: 10,
+                      fontSize: 11,
                       fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
                     ),
                   ),
                   backgroundColor: _getCategoryColor(category),
-                  padding: EdgeInsets.zero,
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 ),
                 if (isImportant)
-                  Icon(Icons.warning_amber_rounded, color: Colors.orange),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.red.shade300, width: 1),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.priority_high, color: Colors.red, size: 16),
+                        SizedBox(width: 4),
+                        Text(
+                          'IMPORTANT',
+                          style: GoogleFonts.poppins(
+                            color: Colors.red.shade700,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
               ],
             ),
-            SizedBox(height: 8),
+            SizedBox(height: 12),
             Text(
               title,
               style: GoogleFonts.poppins(
-                  fontSize: 18, fontWeight: FontWeight.bold),
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[900],
+              ),
             ),
             if (dateRange != null)
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4.0),
+                padding: const EdgeInsets.only(top: 6.0),
                 child: Row(
                   children: [
-                    Icon(Icons.calendar_today, size: 14, color: Colors.grey),
-                    SizedBox(width: 4),
+                    Icon(Icons.calendar_today, size: 14, color: Colors.deepPurple),
+                    SizedBox(width: 6),
                     Text(
                       dateRange,
-                      style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[700]),
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),
               ),
-            SizedBox(height: 8),
+            SizedBox(height: 10),
             Text(
               description,
-              style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[800]),
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                color: Colors.grey[700],
+                height: 1.5,
+              ),
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
             ),
@@ -107,23 +182,41 @@ class UpdateCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.person, size: 16, color: Colors.grey),
-                    SizedBox(width: 4),
+                    Icon(Icons.person_outline, size: 16, color: Colors.grey[600]),
+                    SizedBox(width: 6),
                     Text(
                       "By $createdBy",
-                      style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
                     ),
                   ],
                 ),
-                Row(
-                  children: [
-                    Icon(Icons.favorite, color: Colors.red, size: 20),
-                    SizedBox(width: 4),
-                    Text(
-                      "$likes Likes",
-                      style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[800]),
+                InkWell(
+                  onTap: _toggleLike,
+                  borderRadius: BorderRadius.circular(20),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    child: Row(
+                      children: [
+                        Icon(
+                          _isLiked ? Icons.favorite : Icons.favorite_border,
+                          color: Colors.red,
+                          size: 20,
+                        ),
+                        SizedBox(width: 6),
+                        Text(
+                          "$_likeCount Likes",
+                          style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            color: Colors.grey[800],
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ],
             )
@@ -134,14 +227,14 @@ class UpdateCard extends StatelessWidget {
   }
 
   Color _getCategoryColor(String category) {
-    switch (category) {
-      case 'Exam': return Colors.red;
-      case 'Holiday': return Colors.green;
-      case 'Event': return Colors.blue;
-      case 'Assignment': return Colors.orange;
-      case 'Program': return Colors.deepPurple;
-      case 'Birthday': return Colors.pink;
-      default: return Colors.grey;
+    switch (category.toLowerCase()) {
+      case 'exam': return Colors.red.shade600;
+      case 'holiday': return Colors.green.shade600;
+      case 'event': return Colors.blue.shade600;
+      case 'assignment': return Colors.orange.shade600;
+      case 'program': return Colors.deepPurple.shade600;
+      case 'birthday': return Colors.pink.shade600;
+      default: return Colors.grey.shade600;
     }
   }
 }

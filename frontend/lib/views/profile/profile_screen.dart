@@ -103,60 +103,234 @@ class ProfileScreen extends StatelessWidget {
         final initial = name.isNotEmpty ? name[0].toUpperCase() : 'U';
         final email = user['email'] ?? 'No Email';
         final role = user['role'] ?? 'Student';
+        final userId = user['_id'] ?? 'Unknown ID';
         
         print('✅ Profile loaded successfully: $name ($role)');
 
         return Scaffold(
+          backgroundColor: Colors.grey[50],
           appBar: AppBar(
-            title: Text('Profile'),
+            title: Text('Profile', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
             backgroundColor: Colors.deepPurple,
-            automaticallyImplyLeading: false, // Don't show back button
+            elevation: 0,
+            automaticallyImplyLeading: false,
           ),
-          body: SingleChildScrollView( // Added scroll view for safety on small screens
-            padding: const EdgeInsets.all(24.0),
+          body: SingleChildScrollView(
             child: Column(
               children: [
-                CircleAvatar(
-                  radius: 50,
-                  backgroundColor: Colors.deepPurple.shade100,
-                  child: Text(
-                    initial,
-                    style: TextStyle(fontSize: 40, color: Colors.deepPurple, fontWeight: FontWeight.bold),
+                // Header Section with Profile Picture
+                Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.deepPurple,
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(30),
+                      bottomRight: Radius.circular(30),
+                    ),
+                  ),
+                  padding: EdgeInsets.fromLTRB(24, 24, 24, 40),
+                  child: Column(
+                    children: [
+                      // Profile Picture
+                      Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 4),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 10,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: CircleAvatar(
+                          radius: 60,
+                          backgroundColor: Colors.white,
+                          child: Text(
+                            initial,
+                            style: TextStyle(
+                              fontSize: 48,
+                              color: Colors.deepPurple,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      // Name
+                      Text(
+                        name,
+                        style: GoogleFonts.poppins(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      // Role Badge
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: role == 'teacher' ? Colors.amber : Colors.blue,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          role.toUpperCase(),
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                SizedBox(height: 16),
-                Text(
-                  name,
-                  style: GoogleFonts.poppins(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+                
+                // Profile Details Section
+                Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Profile Information',
+                        style: GoogleFonts.poppins(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey[800],
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      
+                      // Email Card
+                      _buildInfoCard(
+                        icon: Icons.email_outlined,
+                        iconColor: Colors.blue,
+                        title: 'Email',
+                        value: email,
+                      ),
+                      SizedBox(height: 12),
+                      
+                      // Role Card
+                      _buildInfoCard(
+                        icon: Icons.work_outline,
+                        iconColor: Colors.purple,
+                        title: 'Role',
+                        value: role == 'teacher' ? 'Teacher' : 'Student',
+                      ),
+                      SizedBox(height: 12),
+                      
+                      // User ID Card
+                      _buildInfoCard(
+                        icon: Icons.fingerprint,
+                        iconColor: Colors.green,
+                        title: 'User ID',
+                        value: userId,
+                        isMonospace: true,
+                      ),
+                      
+                      SizedBox(height: 32),
+                      
+                      // Logout Button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 56,
+                        child: ElevatedButton.icon(
+                          onPressed: () async {
+                            await ApiService.removeToken();
+                            Navigator.pushReplacementNamed(context, '/login');
+                          },
+                          icon: Icon(Icons.logout, color: Colors.white),
+                          label: Text(
+                            'Logout',
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 2,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                Text(
-                  role.toUpperCase(),
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    color: Colors.grey,
-                  ),
-                ),
-                SizedBox(height: 32),
-                ListTile(
-                  leading: Icon(Icons.email, color: Colors.deepPurple),
-                  title: Text(email, style: GoogleFonts.poppins()),
-                ),
-                ListTile(
-                  leading: Icon(Icons.logout, color: Colors.red),
-                  title: Text('Logout', style: GoogleFonts.poppins(color: Colors.red)),
-                  onTap: () async {
-                    await ApiService.removeToken();
-                    Navigator.pushReplacementNamed(context, '/login');
-                  },
                 ),
               ],
             ),
           ),
         );
       },
+    );
+  }
+  
+  Widget _buildInfoCard({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String value,
+    bool isMonospace = false,
+  }) {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: iconColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: iconColor, size: 24),
+          ),
+          SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  value,
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[800],
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: isMonospace ? 2 : 1,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -58,14 +58,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: Text(
-          'Campus Updates',
-          style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold),
+          'Compus Connect',
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+            color: Colors.white,
+          ),
         ),
-        automaticallyImplyLeading: false, // Don't show back button
         backgroundColor: Colors.deepPurple,
         elevation: 0,
+        automaticallyImplyLeading: false,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.deepPurple, Colors.purpleAccent],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
       ),
       body: RefreshIndicator(
         onRefresh: _refresh,
