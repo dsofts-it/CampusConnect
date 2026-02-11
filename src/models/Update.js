@@ -13,7 +13,15 @@ const updateSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ['Assignment', 'Exam', 'Event', 'General'],
+      enum: [
+        'Assignment',
+        'Exam',
+        'Event',
+        'General',
+        'Holiday',
+        'Program',
+        'News',
+      ],
       required: true,
     },
     isImportant: {

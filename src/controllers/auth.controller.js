@@ -1,119 +1,124 @@
 import User from '../models/User.js';
-import OTP from '../models/OTP.js';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-// Send OTP
-export const sendOTP = async (req, res) => {
+// Signup
+export const signup = async (req, res) => {
   try {
-    const { email, role } = req.body;
+    const { name, email, password, confirmPassword, role } = req.body;
 
-    if (!email || !role) {
+    if (!name || !email || !password || !confirmPassword) {
       return res.status(403).json({
-        success: false,
-        message: 'Email and Role are required',
-      });
-    }
-
-    // Check if user already exists
-    let user = await User.findOne({ email });
-
-    // If user doesn't exist, create a new one (Implicit Signup)
-    if (!user) {
-      user = await User.create({
-        email,
-        role,
-      });
-    } else {
-      // User exists logic...
-    }
-
-    // Generate OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-    // Create OTP Object in DB
-    await OTP.create({ email, otp });
-
-    res.status(200).json({
-      success: true,
-      message: 'OTP sent successfully',
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-// Verify OTP
-export const verifyOTP = async (req, res) => {
-  try {
-    const { email, otp } = req.body;
-
-    if (!email || !otp) {
-      return res.status(400).json({
         success: false,
         message: 'All fields are required',
       });
     }
 
-    // Find the most recent OTP for the email
-    const response = await OTP.find({ email }).sort({ createdAt: -1 }).limit(1);
-
-    if (response.length === 0 || otp !== response[0].otp) {
+    if (password !== confirmPassword) {
       return res.status(400).json({
         success: false,
-        message: 'The OTP is not valid',
+        message: 'Password and Confirm Password do not match',
       });
     }
 
-    // OTP is valid
-    // Update USER Verification status
-    const user = await User.findOne({ email });
-
-    if (!user) {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
       return res.status(400).json({
         success: false,
-        message: 'User not found',
+        message: 'User already exists',
       });
     }
 
-    user.isVerified = true;
-    await user.save();
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Generate JWT Token
-    const payload = {
-      email: user.email,
-      id: user._id,
-      role: user.role,
+    // If role is not provided, default to student (handled by mongoose default but good to be explicit or let model handle)
+    // The user model defaults role to 'student'
+    const userPayload = {
+      name,
+      email,
+      password: hashedPassword,
+      role: role || 'student', // Provide role if sent, else default
+      isVerified: true, // Auto verify as we removed OTP
     };
 
-    const token = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: '24h',
-    });
+    const user = await User.create(userPayload);
 
-    user.token = token;
-    user.password = undefined;
-
-    // Option: Set cookie
-    const options = {
-      expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-      httpOnly: true,
-    };
-
-    res.cookie('token', token, options).status(200).json({
+    return res.status(200).json({
       success: true,
-      token,
-      role: user.role,
-      user,
-      message: 'User logged in successfully',
+      message: 'User registered successfully',
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message: 'User cannot be registered. Please try again.',
+    });
+  }
+};
+
+// Login
+export const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide both email and password',
+      });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'User is not registered, please signup first',
+      });
+    }
+
+    if (await bcrypt.compare(password, user.password)) {
+      const token = jwt.sign(
+        { email: user.email, id: user._id, role: user.role },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: '24h',
+        },
+      );
+
+      // Hide password in response
+      user.password = undefined;
+      // Assign token to user object for response if using custom logic,
+      // but usually we don't save token to DB unless needed.
+
+      const options = {
+        expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+        httpOnly: true,
+      };
+
+      res.cookie('token', token, options).status(200).json({
+        success: true,
+        token,
+        role: user.role,
+        user,
+        message: 'User logged in successfully',
+      });
+    } else {
+      return res.status(403).json({
+        success: false,
+        message: 'Password Incorrect',
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: 'Login failure, please try again',
     });
   }
 };

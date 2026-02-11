@@ -9,13 +9,13 @@
 			"name": "Auth",
 			"item": [
 				{
-					"name": "Send OTP",
+					"name": "Signup",
 					"request": {
 						"method": "POST",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"email\": \"teacher@college.com\",\n    \"role\": \"teacher\"\n}",
+							"raw": "{\n    \"name\": \"John Doe\",\n    \"email\": \"student@college.com\",\n    \"password\": \"password123\",\n    \"confirmPassword\": \"password123\",\n    \"role\": \"student\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -23,7 +23,7 @@
 							}
 						},
 						"url": {
-							"raw": "http://localhost:4000/api/auth/send-otp",
+							"raw": "http://localhost:4000/api/auth/signup",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -32,20 +32,20 @@
 							"path": [
 								"api",
 								"auth",
-								"send-otp"
+								"signup"
 							]
 						}
 					},
 					"response": []
 				},
 				{
-					"name": "Verify OTP",
+					"name": "Login",
 					"request": {
 						"method": "POST",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"email\": \"teacher@college.com\",\n    \"otp\": \"123456\"\n}",
+							"raw": "{\n    \"email\": \"student@college.com\",\n    \"password\": \"password123\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -53,7 +53,7 @@
 							}
 						},
 						"url": {
-							"raw": "http://localhost:4000/api/auth/verify-otp",
+							"raw": "http://localhost:4000/api/auth/login",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -62,7 +62,7 @@
 							"path": [
 								"api",
 								"auth",
-								"verify-otp"
+								"login"
 							]
 						}
 					},
@@ -135,6 +135,69 @@
 							"path": [
 								"api",
 								"updates"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Update (Teacher)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer <jwt_token>",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Correction: Mid Term Exam\",\n    \"description\": \"Exam starts from Tuesday\",\n    \"category\": \"Exam\",\n    \"isImportant\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:4000/api/updates/<update_id>",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"api",
+								"updates",
+								"<update_id>"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Update (Teacher)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer <jwt_token>",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:4000/api/updates/<update_id>",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"api",
+								"updates",
+								"<update_id>"
 							]
 						}
 					},

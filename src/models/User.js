@@ -4,6 +4,7 @@ const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
+      required: true,
       trim: true,
     },
     email: {
@@ -13,6 +14,10 @@ const userSchema = new mongoose.Schema(
       trim: true,
       lowercase: true,
     },
+    password: {
+      type: String,
+      required: true,
+    },
     role: {
       type: String,
       enum: ['student', 'teacher'],
@@ -20,7 +25,7 @@ const userSchema = new mongoose.Schema(
     },
     isVerified: {
       type: Boolean,
-      default: false,
+      default: true,
     },
   },
   { timestamps: true },
